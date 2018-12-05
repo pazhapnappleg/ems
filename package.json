@@ -1,0 +1,45 @@
+{
+  "name": "iboss",
+  "version": "1.0.0",
+  "description": "frontend to capture scrap flow",
+  "repository": "https://github.com/pazhapn/captureui",
+  "license": "MIT",
+  "keywords": [],
+  "types": [],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "webpack -w",
+    "build": "webpack --mode production"
+  },
+  "engines": {
+    "node": ">=8.9"
+  },
+  "dependencies": {
+    "@types/crossfilter": "0.0.32",
+    "@types/d3": "^5.0.1",
+    "@types/dc": "0.0.28",
+    "@types/dot": "^1.1.2",
+    "@types/lodash": "^4.14.117",
+    "@types/nouislider": "^9.0.4",
+    "class-transformer": "^0.1.9",
+    "crossfilter2": "^1.4.6",
+    "d3": "^5.7.0",
+    "dot": "^1.1.2",
+    "nouislider": "^12.0.0",
+    "reflect-metadata": "^0.1.12",
+    "webpack-watch-server": "^1.2.1"
+  },
+  "devDependencies": {
+    "html-webpack-plugin": "^3.2.0",
+    "source-map-loader": "^0.2.4",
+    "ts-loader": "^5.2.1",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.15.0",
+    "tslint-immutable": "^4.7.0",
+    "typedoc": "^0.12.0",
+    "typescript": "^3.0.3",
+    "webpack": "^4.20.2",
+    "webpack-cli": "^3.1.1",
+    "webpack-dev-server": "^3.1.10"
+  }
+}
