@@ -45,9 +45,9 @@ export class AdmissionController{
 
     private createTemplate(): RenderFunction {
         return doT.template("<div class='row'>"+
-            "<div class='col-5'> Gender {{=it.g}}</div>" +
+            "<div class='col-5'> Gender: {{=it.g}}</div>" +
             "<div class='col-2'> Community: {{=it.co}}</div>"+
-            "<div class='col-5'> in {{=it.sn}}</div>"+
+            "<div class='col-5'> {{=it.sn}}</div>"+
             "</div>");
     }
 }
