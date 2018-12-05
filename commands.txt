@@ -1,0 +1,12 @@
+First time
+npm install
+npm install http-server -g
+
+to run the app in development mode
+first command terminal type "npm run watch"
+second command terminal type "http-server -s -c-1"
+
+access the app at http://localhost:8080
+
+for git
+git push -u origin master
