@@ -48,33 +48,35 @@ export class AdmissionController{
         dc.pieChart("#gender-chart")
             .width(this.pieSize.width)
             .height(this.pieSize.height)
-            .slicesCap(this.pieSize.slicesCap)
+            .transitionDuration(500)
             .innerRadius(this.pieSize.innerRadius)
             .dimension(this.genderDimension)
             .group(this.genderGroup)
-            .legend(dc.legend())
-            // workaround for #703: not enough data is accessible through .label() to display percentages
-            .on('pretransition', function(chart) {
-                chart.selectAll('text.pie-slice').text(function(d) {
-                    //return d.data.key + ' ' + dc.utils.printSingleValue((d.endAngle - d.startAngle) / (2*Math.PI) * 100) + '%';
-                    return d.data.key + ' ' + d.data.value;
-                })
-            });
+            //.legend(dc.legend())
+            .on('pretransition', (chart) => {
+                chart.selectAll('text.pie-slice').text((d) => d.data.key + ' - ' + d.data.value)
+            }).minAngleForLabel(10)            
+            .turnOnControls();
+            //return d.data.key + ' ' + dc.utils.printSingleValue((d.endAngle - d.startAngle) / (2*Math.PI) * 100) + '%';
     }
     private createCommunityChart(){
         //this.communityChart = 
-        dc.pieChart("#community-chart")
-            .width(this.pieSize.width)
+        dc.barChart("#community-chart")
+            .width(300)
             .height(this.pieSize.height)
-            .slicesCap(this.pieSize.slicesCap)
-            .innerRadius(this.pieSize.innerRadius)
+            .transitionDuration(500)
             .dimension(this.communityDimension)
             .group(this.communityGroup)
             //.legend(dc.legend())
             // workaround for #703: not enough data is accessible through .label() to display percentages
             .on('pretransition', (chart) => {
-                chart.selectAll('text.pie-slice').text((d) => d.data.key + ' ' + d.data.value)
-            });
+                chart.selectAll('text.pie-slice').text((d) => d.data.key + ' - ' + d.data.value)
+            })         
+            .x(d3.scaleBand())
+            .xUnits(dc.units.ordinal)
+            .xAxisLabel('Community')
+            .yAxisLabel('Count')
+            .turnOnControls();
     }
     private createDataTable(){
         //Defaulted to sorting by community, should be made dynamic
