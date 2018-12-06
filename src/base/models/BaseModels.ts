@@ -1,3 +1,3 @@
-export interface ListData{
+export interface Record{
     id:string;
 }

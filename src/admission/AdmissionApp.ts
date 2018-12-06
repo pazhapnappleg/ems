@@ -5,8 +5,8 @@ import { AdmissionController } from "./AdmissionController";
 
 export class AdmissionApp{
 
-    private admissionData: AdmissionData;
-    private admissionController: AdmissionController;
+    private admissionData: AdmissionData; //Global Data for admission model, it could be a part whole app global data in future
+    private admissionController: AdmissionController; // Controller for the charts only, interactions & data handling could be another
 
     constructor(){
         this.admissionData = new AdmissionData();

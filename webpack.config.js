@@ -11,13 +11,13 @@ module.exports = {
       hot: true
     },
     entry: {
-        vendor: ['crossfilter','lodash','nouislider', 'd3', 'dot'],
+        vendor: ['crossfilter','lodash','nouislider', 'd3', 'dc', 'dot'],
         app: './src/WholeApp.ts'
     },
     output: {
         path: path.resolve(__dirname, '.'),
         filename: 'js/[name].bundle.js',
-        library: ['lodash','nouislider', 'crossfilter', 'd3', 'dot'],
+        library: ['lodash','nouislider', 'crossfilter', 'd3', 'dc', 'dot'],
         libraryTarget: 'umd'
     },
     optimization: {
@@ -40,6 +40,7 @@ module.exports = {
             root: '_'
             },
         nouislider: 'noUiSlider',
+        dc: 'dc',
         d3: 'd3',
         dot: 'doT'
     },
