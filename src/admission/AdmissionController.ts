@@ -1,4 +1,5 @@
 import * as crossfilter from 'crossfilter';
+import * as d3 from 'd3';
 import * as dc from 'dc';
 import { Student } from './models/BackendModels';
 import { AdmissionConstants } from './utils/AdmissionConstants';
@@ -22,10 +23,12 @@ export class AdmissionController{
     private cf:crossfilter.Crossfilter<Student>;
     private dimsMap:Map<string, crossfilter.Dimension<Student, number>>;
     //Chart components in admission module
-    //private dataListChart:DataListChart<Student>;
     //private genderChart:dc.PieChart;
+    private pieSize = {"width":200,"height":200,"innerRadius":20,"slicesCap":4};
     private genderDimension:crossfilter.Dimension<Student, number>;
-    private genderGroup;
+    private genderGroup: crossfilter.Group<Student, crossfilter.NaturallyOrderedValue, crossfilter.NaturallyOrderedValue>;
+    private communityDimension:crossfilter.Dimension<Student, number>;
+    private communityGroup: crossfilter.Group<Student, crossfilter.NaturallyOrderedValue, crossfilter.NaturallyOrderedValue>;
 
     constructor(admissionData: AdmissionData){
         this.admissionData = admissionData;
@@ -34,24 +37,19 @@ export class AdmissionController{
     }
 
     public intialize(records:Student[]){
-        try{
-            //this.createChartControllers();
-            this.cf = crossfilter<Student>(records);
-            this.createDimentions();
-            this.createGroups();
-            this.createCharts();
-            this.renderCharts();
-        }catch(e){
-            console.error(e);
-        }
+        this.cf = crossfilter<Student>(records);
+        this.createDimentions();
+        this.createGroups();
+        this.createCharts();
+        this.renderCharts();
     }
-    private createCharts(){
+    private createGenderChart(){
         //this.genderChart = 
         dc.pieChart("#gender-chart")
-            .width(768)
-            .height(480)
-            .slicesCap(4)
-            .innerRadius(100)
+            .width(this.pieSize.width)
+            .height(this.pieSize.height)
+            .slicesCap(this.pieSize.slicesCap)
+            .innerRadius(this.pieSize.innerRadius)
             .dimension(this.genderDimension)
             .group(this.genderGroup)
             .legend(dc.legend())
@@ -62,23 +60,57 @@ export class AdmissionController{
                 })
             });
     }
-    private renderCharts(): void{
-        //this.dataListChart.render();
-        dc.renderAll();
+    private createCommunityChart(){
+        //this.communityChart = 
+        dc.pieChart("#community-chart")
+            .width(this.pieSize.width)
+            .height(this.pieSize.height)
+            .slicesCap(this.pieSize.slicesCap)
+            .innerRadius(this.pieSize.innerRadius)
+            .dimension(this.communityDimension)
+            .group(this.communityGroup)
+            //.legend(dc.legend())
+            // workaround for #703: not enough data is accessible through .label() to display percentages
+            .on('pretransition', function(chart) {
+                chart.selectAll('text.pie-slice').text(function(d) {
+                    return d.data.key + ' ' + dc.utils.printSingleValue((d.endAngle - d.startAngle) / (2*Math.PI) * 100) + '%';
+                })
+            });
     }
-    /*
-    private createChartControllers(){
-        this.dataListChart = new DataListChart("students", this.createTemplate(), 
-                                    this.dimsMap, AdmissionConstants.dims.gender);
+    private createDataTable(){
+        //Defaulted to sorting by community, should be made dynamic
+        dc.dataTable("#data-table")
+            .width(300)
+            .height(480)
+            .dimension(this.dimsMap.get(AdmissionConstants.dims.community.field))
+            .group((record) => record.co)
+            .size(50)
+            .showGroups(false)
+            .columns([
+                { label: "Gender", format: (d) => d.g },
+                { label: "Community", format: (d) => d.co },
+                { label: "Name", format: (d) => d.sn }
+            ])
+            .sortBy((record) => record.co)
+            .order(d3.ascending);
     }
-    */
+    private createCharts(){
+        this.createGenderChart();
+        this.createCommunityChart();
+        this.createDataTable();
+    }
     private createGroups(){
         this.genderGroup = this.genderDimension.group().reduceSum((record) => record.g);
+        this.communityGroup = this.communityDimension.group().reduceSum((record) => record.co);
     }
     private createDimentions(){
         this.genderDimension = this.cf.dimension((record) => record.g);
+        this.communityDimension = this.cf.dimension((record) => record.co);
         this.dimsMap.set(AdmissionConstants.dims.gender.field, this.genderDimension);
-        this.dimsMap.set(AdmissionConstants.dims.community.field, this.cf.dimension((record) => record.co));
+        this.dimsMap.set(AdmissionConstants.dims.community.field, this.communityDimension);
+    }
+    private renderCharts(): void{
+        dc.renderAll();
     }
     /*
     private createTemplate(): RenderFunction {
