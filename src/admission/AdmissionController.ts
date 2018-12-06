@@ -56,7 +56,8 @@ export class AdmissionController{
             // workaround for #703: not enough data is accessible through .label() to display percentages
             .on('pretransition', function(chart) {
                 chart.selectAll('text.pie-slice').text(function(d) {
-                    return d.data.key + ' ' + dc.utils.printSingleValue((d.endAngle - d.startAngle) / (2*Math.PI) * 100) + '%';
+                    //return d.data.key + ' ' + dc.utils.printSingleValue((d.endAngle - d.startAngle) / (2*Math.PI) * 100) + '%';
+                    return d.data.key + ' ' + d.data.value;
                 })
             });
     }
@@ -71,10 +72,8 @@ export class AdmissionController{
             .group(this.communityGroup)
             //.legend(dc.legend())
             // workaround for #703: not enough data is accessible through .label() to display percentages
-            .on('pretransition', function(chart) {
-                chart.selectAll('text.pie-slice').text(function(d) {
-                    return d.data.key + ' ' + dc.utils.printSingleValue((d.endAngle - d.startAngle) / (2*Math.PI) * 100) + '%';
-                })
+            .on('pretransition', (chart) => {
+                chart.selectAll('text.pie-slice').text((d) => d.data.key + ' ' + d.data.value)
             });
     }
     private createDataTable(){
