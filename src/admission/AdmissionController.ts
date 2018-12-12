@@ -80,8 +80,6 @@ export class AdmissionController{
             this.resetElements[i].addEventListener('click', 
                 (e)=>{
                     this.allCharts.get(e.srcElement.parentElement.id).filterAll();
-                    this.ofs = 0;
-                    this.updateOffset(this.allCharts.get(this.dataTable));
                     dc.redrawAll();
                     e.preventDefault();
                 }, false);
