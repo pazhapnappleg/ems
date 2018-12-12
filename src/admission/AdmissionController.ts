@@ -38,6 +38,11 @@ export class AdmissionController{
     //private genderChart:dc.PieChart;
     private pieSize = {"width":150,"height":150,"innerRadius":20};
     private barSize = {"width":300,"height":200};
+    private resetElements:HTMLCollectionOf<Element>;
+    private nextElement: HTMLElement;
+    private lastElement: HTMLElement;
+    private allCharts:Map<string, dc.BaseMixin<any>>;
+    private chartTags ={gender:"gender", college:"college", community:"community", dept:"dept"}
     private genderDimension:crossfilter.Dimension<any[], number>;
     private genderGroup: crossfilter.Group<any[], crossfilter.NaturallyOrderedValue, crossfilter.NaturallyOrderedValue>;
     private genderFn = (d) => d[A.gender];
@@ -50,9 +55,13 @@ export class AdmissionController{
     private deptDimension:crossfilter.Dimension<any[], number>;
     private deptGroup: crossfilter.Group<any[], crossfilter.NaturallyOrderedValue, crossfilter.NaturallyOrderedValue>;
     private deptFn = (d) => d[A.deptId];
+    private ofs = 0;
+    private pag = 17;    // use odd page size to show the effect better
+    private dataTable = "data-table";
 
     constructor(admissionData: AdmissionData){
         this.admissionData = admissionData;
+        this.allCharts = new Map();
         this.dimsMap = new Map();
         console.log("AdmissionController initialized "+this.admissionData.dataLoaded);
     }
@@ -61,28 +70,43 @@ export class AdmissionController{
         this.cf = crossfilter<any[]>(records);
         this.createDimentions();
         this.createGroups();
+        this.addResetEventListeners();
         this.createCharts();
         this.renderCharts();
     }
+    private addResetEventListeners():void{ 
+        this.resetElements = document.getElementsByClassName("reset");
+        for(var i=0;i<this.resetElements.length;i++){
+            this.resetElements[i].addEventListener('click', 
+                (e)=>{this.allCharts.get(e.srcElement.parentElement.id).filterAll();dc.redrawAll();e.preventDefault();}, false);
+        }
+        this.nextElement = document.getElementById("next");
+        this.nextElement.addEventListener('click', (e)=>{this.next(this.allCharts.get(this.dataTable));e.preventDefault();},false);
+        this.lastElement = document.getElementById("last");
+        this.lastElement.addEventListener('click', (e)=>{this.last(this.allCharts.get(this.dataTable));e.preventDefault();},false);
+    }
+    
     //pie charts -> gender, college
     private createPieCharts(){
-        //this.genderChart = 
-        dc.pieChart("#gender-chart")
-            .width(this.pieSize.width)
+        let chartTag = this.chartTags.gender;
+        let chart = dc.pieChart("#"+chartTag)
+        this.allCharts.set(chartTag, chart);
+        chart.width(this.pieSize.width)
             .height(this.pieSize.height)
             .transitionDuration(500)
             .innerRadius(this.pieSize.innerRadius)
             .dimension(this.genderDimension)
             .group(this.genderGroup)
             //.legend(dc.legend())
-            .on('pretransition', (chart) => {
-                chart.selectAll('text.pie-slice').text((d) => d.data.key + ' - ' + d.data.value)
-            }).minAngleForLabel(10)            
-            .turnOnControls();
+            .label((d) => {
+                return d.value +" "+((d.key == 1)?"Male":"Female");
+            } );
             //return d.data.key + ' ' + dc.utils.printSingleValue((d.endAngle - d.startAngle) / (2*Math.PI) * 100) + '%';
         
-        dc.pieChart("#college-chart")
-            .width(this.pieSize.width)
+        chartTag = this.chartTags.college;
+        chart = dc.pieChart("#"+chartTag)
+        this.allCharts.set(chartTag, chart);
+        chart.width(this.pieSize.width)
             .height(this.pieSize.height)
             .transitionDuration(500)
             .innerRadius(this.pieSize.innerRadius)
@@ -91,31 +115,53 @@ export class AdmissionController{
             //.legend(dc.legend())
             .on('pretransition', (chart) => {
                 chart.selectAll('text.pie-slice').text((d) => d.data.key + ' - ' + d.data.value)
-            }).minAngleForLabel(10)            
-            .turnOnControls();
+            })
+            .minAngleForLabel(10);
     }
-    //bar charts -> community, dept
-    private createCommunityChart(){
-        //this.communityChart = 
-        dc.barChart("#community-chart")
+    //bar charts -> community
+    private createBarCharts(){
+        /*
+        let chartTag = this.chartTags.community;
+        let chart = dc.barChart("#"+chartTag)
+        this.allCharts.set(chartTag, chart);
+        chart
             .width(this.barSize.width)
             .height(this.barSize.height)
             .transitionDuration(500)
             .dimension(this.communityDimension)
             .group(this.communityGroup)
-            //.legend(dc.legend())
-            // workaround for #703: not enough data is accessible through .label() to display percentages
             .on('pretransition', (chart) => {
                 chart.selectAll('text.pie-slice').text((d) => d.data.key + ' - ' + d.data.value)
             })         
             .x(d3.scaleBand())
             .xUnits(dc.units.ordinal)
             .xAxisLabel('Community')
-            .yAxisLabel('Count')
-            .turnOnControls();
-        dc.barChart("#dept-chart")
-            .width(500)
+            .yAxisLabel('Count');
+        */
+    }
+    //row charts -> community
+    private createRowCharts(){
+        let chartTag = this.chartTags.community;
+        let chart = dc.rowChart("#"+chartTag)
+        this.allCharts.set(chartTag, chart);
+        chart
+            .width(this.barSize.width)
             .height(this.barSize.height)
+            .transitionDuration(500)
+            .dimension(this.communityDimension)
+            .group(this.communityGroup)
+            .legend(dc.legend())
+            .on('pretransition', (chart) => {
+                chart.selectAll('text.pie-slice').text((d) => d.data.key + ' - ' + d.data.value)
+            })  
+            .elasticX(true)
+            .xAxis().ticks(8);
+            
+        chartTag = this.chartTags.dept;
+        chart = dc.rowChart("#"+chartTag)
+        this.allCharts.set(chartTag, chart);
+        chart.width(this.barSize.width)
+            .height(500)
             .transitionDuration(500)
             .dimension(this.deptDimension)
             .group(this.deptGroup)
@@ -123,22 +169,19 @@ export class AdmissionController{
             // workaround for #703: not enough data is accessible through .label() to display percentages
             .on('pretransition', (chart) => {
                 chart.selectAll('text.pie-slice').text((d) => d.data.key + ' - ' + d.data.value)
-            })         
-            .x(d3.scaleBand())
-            .xUnits(dc.units.ordinal)
-            .xAxisLabel('Dept')
-            .yAxisLabel('Count')
-            .turnOnControls();
+            })  
+            .elasticX(true)
+            .xAxis().ticks(8);
     }
     
     private createDataTable(){
-        //Defaulted to sorting by community, should be made dynamic
-        dc.dataTable("#data-table")
-            .width(500)
+        let chart = dc.dataTable("#"+this.dataTable);
+        this.allCharts.set(this.dataTable, chart);
+        chart.width(500)
             .height(480)
             .dimension(this.dimsMap.get(AdmissionConstants.dims.community.field))
             .group(this.communityFn)
-            .size(50)
+            .size(Infinity)
             .showGroups(false)
             .columns([
                 { label: "Gender", format: this.genderFn },
@@ -146,11 +189,51 @@ export class AdmissionController{
                 { label: "Name", format: (d) => d[A.studentName] }
             ])
             .sortBy(this.communityFn)
-            .order(d3.ascending);
+            .order(d3.ascending)
+            .on('preRender', () => this.updateOffset(chart))
+            .on('preRedraw', () => this.updateOffset(chart))
+            .on('pretransition', () => this.display());
+    }
+    private updateOffset(chart) {
+        let totFilteredRecs: any = this.cf.groupAll().value();
+        this.ofs = this.ofs >= totFilteredRecs ? Math.floor((totFilteredRecs - 1) / this.pag) * this.pag : this.ofs;
+        this.ofs = this.ofs < 0 ? 0 : this.ofs;
+
+        chart.beginSlice(this.ofs);
+        chart.endSlice(this.ofs+this.pag);
+    }
+    private display() {
+        let totFilteredRecs: any = this.cf.groupAll().value();
+        let end = this.ofs + this.pag > totFilteredRecs ? totFilteredRecs : this.ofs + this.pag;
+        d3.select('#begin')
+            .text(end === 0? this.ofs : this.ofs + 1);
+        d3.select('#end')
+            .text(end);
+        d3.select('#last')
+            .attr('disabled', this.ofs-this.pag<0 ? 'true' : null);
+        d3.select('#next')
+            .attr('disabled', this.ofs+this.pag>=totFilteredRecs ? 'true' : null);
+        d3.select('#size').text(totFilteredRecs);
+        if(totFilteredRecs != this.cf.size()){
+          d3.select('#totalsize').text("(filtered Total: " + this.cf.size() + " )");
+        }else{
+          d3.select('#totalsize').text('');
+        }
+    }
+    private next(chart) {
+        this.ofs += this.pag;
+        this.updateOffset(chart);
+        chart.redraw();
+    }
+    private last(chart) {
+        this.ofs -= this.pag;
+        this.updateOffset(chart);
+        chart.redraw();
     }
     private createCharts(){
         this.createPieCharts();
-        this.createCommunityChart();
+        this.createBarCharts();
+        this.createRowCharts();
         this.createDataTable();
     }
     private createDimentions(){
@@ -165,10 +248,10 @@ export class AdmissionController{
         dc.renderAll();
     }
     private createGroups(){
-        this.genderGroup = this.genderDimension.group().reduceCount();
-        this.communityGroup = this.communityDimension.group().reduceCount();
-        this.deptGroup = this.deptDimension.group().reduceCount();
-        this.collegeGroup = this.collegeDimension.group().reduceCount();
+        this.genderGroup = this.genderDimension.group();
+        this.communityGroup = this.communityDimension.group();
+        this.deptGroup = this.deptDimension.group();
+        this.collegeGroup = this.collegeDimension.group();
     }
     /*
     private createTemplate(): RenderFunction {
