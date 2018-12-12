@@ -78,7 +78,13 @@ export class AdmissionController{
         this.resetElements = document.getElementsByClassName("reset");
         for(var i=0;i<this.resetElements.length;i++){
             this.resetElements[i].addEventListener('click', 
-                (e)=>{this.allCharts.get(e.srcElement.parentElement.id).filterAll();dc.redrawAll();e.preventDefault();}, false);
+                (e)=>{
+                    this.allCharts.get(e.srcElement.parentElement.id).filterAll();
+                    this.ofs = 0;
+                    this.updateOffset(this.allCharts.get(this.dataTable));
+                    dc.redrawAll();
+                    e.preventDefault();
+                }, false);
         }
         this.nextElement = document.getElementById("next");
         this.nextElement.addEventListener('click', (e)=>{this.next(this.allCharts.get(this.dataTable));e.preventDefault();},false);
@@ -99,7 +105,7 @@ export class AdmissionController{
             .group(this.genderGroup)
             //.legend(dc.legend())
             .label((d) => {
-                return d.value +" "+((d.key == 1)?"Male":"Female");
+                return d.value +" "+((d.key == 2)?"Male":"Female");
             } );
             //return d.data.key + ' ' + dc.utils.printSingleValue((d.endAngle - d.startAngle) / (2*Math.PI) * 100) + '%';
         
